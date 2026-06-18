@@ -248,6 +248,7 @@ function unlock(){
 }
 
 const PROFILES = [
+  {n:1, live:1, label:'1 Entrada', sub:'por live', obs:'Indicado', color:'#2ECC71'},
   {n:2, live:2, label:'2 Entradas', sub:'por live', obs:'Conservador', color:'#4CAF50'},
   {n:3, live:3, label:'3 Entradas', sub:'por live', obs:'Moderado', color:'#C9A84C'},
   {n:4, live:4, label:'4 Entradas', sub:'por live', obs:'Arrojado', color:'#E67E22'},
@@ -257,7 +258,7 @@ const PROFILES = [
 const KEY = 'bacbru_' + NOME.toLowerCase().replace(/\s+/g,'_');
 let S = {
   banca: 500,
-  profile: 3,
+  profile: 4,
   days: new Array(30).fill(false),
   session: new Array(15).fill(null),
   history: [],
