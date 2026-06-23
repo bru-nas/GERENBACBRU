@@ -433,6 +433,7 @@ function encerrar(){
   S.lucros={};
   S.empateMult={};
   S.empateTipo={};
+  S.entradasExtras=0;
   saveState();
   alert('✅ Sessão '+S.sessoesDoDia.length+' encerrada!\nResultado: '+fmtS(result)+'\nBanca: '+fmtR(S.banca)+'\n\n'+(S.sessoesDoDia.length>=3?'Você completou 3 sessões. Feche o dia no Resultado a Longo Prazo.':'Faltam '+(3-S.sessoesDoDia.length)+' sessões para fechar o dia.'));
   go('inicio');
