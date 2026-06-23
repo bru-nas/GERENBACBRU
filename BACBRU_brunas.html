@@ -460,6 +460,32 @@ function editarBancaDia(){
   saveState();render();
 }
 
+function resetarTudo(){
+  const ok=confirm('⚠️ Isso vai apagar TODOS os dias realizados e recomeçar do Dia 1.\n\nA banca atual será mantida. Deseja continuar?');
+  if(!ok)return;
+  S.diasReais=[];
+  S.sessoesDoDia=[];
+  S.bancaInicioDia=null;
+  S.bancaDia=null;
+  S.session=new Array(12).fill(null);
+  S.lucros={};
+  S.empateMult={};
+  S.empateTipo={};
+  S.entradasExtras=0;
+  S.days=new Array(30).fill(false);
+  S.history=[];
+  saveState();render();
+}
+
+function excluirDia(dia){
+  const ok=confirm('Excluir o Dia '+dia+'? Os outros dias serão mantidos.');
+  if(!ok)return;
+  S.diasReais=(S.diasReais||[]).filter(d=>d.dia!==dia);
+  // Renumera os dias
+  S.diasReais.forEach((d,i)=>d.dia=i+1);
+  saveState();render();
+}
+
 function go(t){
   S.tab=t; saveState();
   document.querySelectorAll('.ntab').forEach(b=>b.classList.remove('active'));
@@ -565,7 +591,10 @@ function rResultados(){
       h+=`<div class="day-card done">
         <div class="dtop">
           <div class="dnum">DIA ${d.dia}</div>
-          <div class="dok" style="font-size:.7rem;color:${d.lucro>=0?'#4CAF50':'#e74c3c'}">${fmtS(d.lucro)}</div>
+          <div style="display:flex;align-items:center;gap:.5rem">
+            <div class="dok" style="font-size:.7rem;color:${d.lucro>=0?'#4CAF50':'#e74c3c'}">${fmtS(d.lucro)}</div>
+            <button onclick="event.stopPropagation();excluirDia(${d.dia})" style="background:none;border:none;color:#e74c3c;font-size:.85rem;cursor:pointer;padding:.1rem .3rem">🗑️</button>
+          </div>
         </div>
         <div class="dgrid">
           <div class="di"><div>BANCA INÍCIO</div><span>${fmtR(d.bancaInicio)}</span></div>
