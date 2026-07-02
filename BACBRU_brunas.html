@@ -434,19 +434,23 @@ function fecharDia(){
   const g=S.sessoesDoDia.reduce((a,s)=>a+s.g,0);
   const p=S.sessoesDoDia.reduce((a,s)=>a+s.p,0);
   if(!S.diasReais)S.diasReais=[];
+  const numDia=S.diasReais.length+1;
   S.diasReais.push({
-    dia: S.diasReais.length+1,
+    dia: numDia,
     bancaInicio: S.bancaInicioDia,
     bancaFinal: S.banca,
     lucro: lucroD,
     sessoes: S.sessoesDoDia.length,
+    sessoesDetalhe: S.sessoesDoDia.map(s=>s.result),
     g: g, p: p
   });
+  // Marca o dia correspondente na projeção de 30 dias
+  if(numDia<=30){ S.days[numDia-1]=true; }
   S.sessoesDoDia=[];
   S.bancaInicioDia=null;
   S.bancaDia=null;
   saveState();
-  alert('📅 Dia '+S.diasReais.length+' fechado!\nLucro do dia: '+fmtS(lucroD)+'\nBanca: '+fmtR(S.banca));
+  alert('📅 Dia '+numDia+' fechado!\nLucro do dia: '+fmtS(lucroD)+'\nBanca: '+fmtR(S.banca));
   render();
 }
 
@@ -602,6 +606,7 @@ function rResultados(){
           <div class="di"><div>SESSÕES</div><span>${d.sessoes}</span></div>
           <div class="di"><div>G / P</div><span>${d.g} / ${d.p}</span></div>
         </div>
+        ${d.sessoesDetalhe?`<div style="display:flex;gap:.3rem;margin-top:.4rem;flex-wrap:wrap">${d.sessoesDetalhe.map((r,si)=>`<span style="font-size:.6rem;padding:.2rem .45rem;border-radius:6px;background:${r>=0?'rgba(76,175,80,.12)':'rgba(231,76,60,.12)'};color:${r>=0?'#4CAF50':'#e74c3c'}">S${si+1}: ${fmtS(r)}</span>`).join('')}</div>`:''}
       </div>`;
     }
     const lucroTotal=dias.reduce((a,d)=>a+d.lucro,0);
