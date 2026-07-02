@@ -619,43 +619,40 @@ function rResultados(){
     h+=`<div style="text-align:center;padding:1.5rem 1rem;color:var(--grey);font-size:.8rem">Nenhum dia fechado ainda.<br>Encerre suas sessões e feche o dia para registrar aqui.</div>`;
   }
 
-  // Projeção de 30 dias a partir da banca atual
-  h+=`<div class="wlbl" style="margin-top:1.2rem">📈 Projeção 30 Dias (a partir da banca atual)</div>`;
+  // Projeção começa após os dias já realizados
+  const diasFeitos=(S.diasReais||[]).length;
+  const diasProj=Math.max(0,30-diasFeitos);
+  h+=`<div class="wlbl" style="margin-top:1.2rem">📈 Projeção Próximos Dias (a partir da banca atual)</div>`;
   let b=S.banca;
   const nDia=PROFILES[S.profile].n;
-  const weeks=['Semana 1 — Dias 1 a 7','Semana 2 — Dias 8 a 14','Semana 3 — Dias 15 a 21','Semana 4 — Dias 22 a 28','Dias 29 e 30'];
   const projDays=[];
-  for(let i=0;i<30;i++){
-    // lucro do dia = n entradas (total do dia) × valor da entrada calculada sobre a banca do dia
+  for(let i=0;i<diasProj;i++){
     const baseD=ceil5(b*0.05);
     const empateD=ceil5(baseD*0.10);
     const entryD=ceil5(baseD+empateD);
     const lucro=(entryD-empateD)*nDia*3;
-    projDays.push({banca:b,lucro,bancaFinal:b+lucro});
+    projDays.push({banca:b,lucro,bancaFinal:b+lucro,diaNum:diasFeitos+i+1});
     b+=lucro;
   }
-  for(let w=0;w<5;w++){
-    const st=w*7,en=Math.min(st+7,30);
-    h+=`<div class="wlbl" style="font-size:.55rem;opacity:.7">${weeks[w]}</div>`;
-    for(let i=st;i<en;i++){
-      const d=projDays[i],done=S.days[i];
-      h+=`<div class="day-card ${done?'done':''}" onclick="S.days[${i}]=!S.days[${i}];saveState();render()">
-        <div class="dtop">
-          <div class="dnum">DIA ${i+1}</div>
-          <div class="dok">${done?'✅':'○'}</div>
-        </div>
-        <div class="dgrid">
-          <div class="di lucro"><div>BANCA FINAL</div><span>${fmtR(d.bancaFinal)}</span></div>
-          <div class="di lucro"><div>LUCRO</div><span>+${fmtR(d.lucro)}</span></div>
-        </div>
-      </div>`;
-    }
+  for(let i=0;i<projDays.length;i++){
+    const d=projDays[i];
+    h+=`<div class="day-card">
+      <div class="dtop">
+        <div class="dnum">DIA ${d.diaNum}</div>
+        <div class="dok">○</div>
+      </div>
+      <div class="dgrid">
+        <div class="di lucro"><div>BANCA FINAL</div><span>${fmtR(d.bancaFinal)}</span></div>
+        <div class="di lucro"><div>LUCRO</div><span>+${fmtR(d.lucro)}</span></div>
+      </div>
+    </div>`;
   }
   const totalProj=projDays.reduce((a,d)=>a+d.lucro,0);
+  const bancaFinal30=projDays.length?projDays[projDays.length-1].bancaFinal:S.banca;
   h+=`<div class="tbar">
     <div class="titem"><div class="tl">Lucro Projetado</div><div class="tv">+${fmtR(totalProj)}</div></div>
-    <div class="titem"><div class="tl">Banca em 30d</div><div class="tv">${fmtR(projDays[29].bancaFinal)}</div></div>
-    <div class="titem"><div class="tl">Dias OK</div><div class="tv" style="color:var(--gold2)">${S.days.filter(Boolean).length}/30</div></div>
+    <div class="titem"><div class="tl">Banca em 30d</div><div class="tv">${fmtR(bancaFinal30)}</div></div>
+    <div class="titem"><div class="tl">Dias Feitos</div><div class="tv" style="color:var(--gold2)">${diasFeitos}/30</div></div>
   </div>`;
   return h;
 }
