@@ -329,16 +329,23 @@ function selTipo(i,t){
   saveState();render();
 }
 
+function removerEntrada(i){
+  // Remove uma entrada extra: apaga o resultado e reduz o contador de extras
+  if(S.lucros)delete S.lucros[String(i)];
+  S.session[i]=null;
+  // Reduz entradasExtras se houver
+  if(S.entradasExtras&&S.entradasExtras>0) S.entradasExtras--;
+  if(S.empateMult)delete S.empateMult[String(i)];
+  if(S.empateTipo)delete S.empateTipo[String(i)];
+  saveState();render();
+}
 function marcarG(i){
   if(S.session[i]==='G'){
-    // Desfaz: remove o lucro guardado
-    const lucroAnterior=(S.lucros||{})[String(i)]||0;
-    S.banca=S.banca-lucroAnterior;
+    // Desmarca
     if(S.lucros)delete S.lucros[String(i)];
     S.session[i]=null;
     saveState();render();return;
   }
-  const isExtra=i>=PROFILES[S.profile].n;
   const {entry,empate,gale,empateGale}=calcSessao();
   const mult=(S.empateMult||{})[String(i)];
   const tipo=(S.empateTipo||{})[String(i)];
@@ -360,14 +367,12 @@ function marcarG(i){
   S.session[i]='G';
   if(!S.lucros)S.lucros={};
   S.lucros[String(i)]=lucro;
-  S.banca=Math.max(0,S.banca+lucro);
+  // NÃO mexe na banca aqui — só ao finalizar sessão
   saveState();render();
 }
 function marcarP(i){
   if(S.session[i]==='P'){
-    // Desfaz: devolve a perda guardada
-    const perdaAnterior=(S.lucros||{})[String(i)]||0;
-    S.banca=S.banca-perdaAnterior;
+    // Desmarca
     if(S.lucros)delete S.lucros[String(i)];
     S.session[i]=null;
     saveState();render();return;
@@ -376,32 +381,18 @@ function marcarP(i){
   const perda=entry+empate+gale+empateGale;
   // Saldo da sessão ANTES deste loss
   const saldoAntes=sessaoResult();
-  // Aplica o loss
+  // Registra o loss
   S.session[i]='P';
   if(!S.lucros)S.lucros={};
   S.lucros[String(i)]=-perda;
-  S.banca=Math.max(0,S.banca-perda);
-  // Saldo da sessão DEPOIS deste loss
-  const saldoDepois=saldoAntes-perda;
-  // STOP LOSS: só dispara se já estava negativo antes deste loss
-  // (ou seja, tomou loss enquanto ainda não tinha recuperado o red anterior)
+  // STOP LOSS: só se já estava negativo antes deste loss
   if(saldoAntes<0){
-    S.history.unshift({
-      date:new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}),
-      result:sessaoResult(),banca:S.banca,
-      g:S.session.filter(v=>v==='G').length,p:S.session.filter(v=>v==='P').length
-    });
-    S.session=new Array(12).fill(null);
-    S.lucros={};
-    S.empateMult={};
-    S.empateTipo={};
-    S.entradasExtras=0;
     saveState();
-    alert('🛑 STOP LOSS ATINGIDO\nVocê tomou um loss enquanto ainda estava negativo.\nSessão encerrada.\nNova banca: R$ '+S.banca.toFixed(2).replace('.',','));
-    go('inicio');
+    alert('🛑 STOP LOSS ATINGIDO\nVocê tomou loss enquanto estava negativo.\nFinalize a sessão para atualizar a banca.');
+    render();
     return;
   }
-  // Saldo ainda >= 0 ou ficou negativo agora (primeiro red): continua, libera +3 entradas
+  // NÃO mexe na banca — só ao finalizar
   saveState();render();
 }
 function encerrar(){
@@ -413,6 +404,8 @@ function encerrar(){
   // Marca início do dia se for a primeira sessão
   if(!S.sessoesDoDia)S.sessoesDoDia=[];
   if(S.sessoesDoDia.length===0){ S.bancaInicioDia=S.bancaDia||S.banca; }
+  // AGORA sim aplica o resultado na banca (só ao finalizar)
+  S.banca=Math.max(0,S.banca+result);
   S.sessoesDoDia.push({ result:result, g:g, p:p2 });
   S.history.unshift({
     date: new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}),
@@ -661,7 +654,7 @@ function rResultados(){
 function rSessao(){
   const {entry,empate,gale,empateGale,n}=calcSessao();
   const result=sessaoResult();
-  const novaBanca=S.banca;
+  const novaBanca=S.banca+result;
   const g=S.session.filter(v=>v==='G').length;
   const p=S.session.filter(v=>v==='P').length;
   const total=g+p;
@@ -695,6 +688,7 @@ function rSessao(){
         <div class="ebtns">
           <button class="bg ${v==='G'?'sel':''}" onclick="marcarG(${i})">✓ G</button>
           <button class="bp ${v==='P'?'sel':''}" onclick="marcarP(${i})">✗ P</button>
+          ${i>=nLive?`<button onclick="removerEntrada(${i})" style="padding:.4rem .6rem;border-radius:8px;border:1px solid rgba(231,76,60,.3);background:transparent;color:#e74c3c;cursor:pointer;font-size:.85rem">🗑️</button>`:''}
         </div>
       </div>
       <div class="evals">
